@@ -1,0 +1,18 @@
+{
+  "name": "Shello",
+  "version": "0.1",
+  "manifest_version": 2,
+  "description": "An extension to diplay card data from Trello.com.",
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "page": "background.html"
+  },
+  "permissions": [ "tabs", "https://docs.google.com/feeds/*",
+  "https://trello.com/1/OAuthGetRequestToken",
+  "https://trello.com/1/OAuthAuthorizeToken",
+  "https://trello.com/1/OAuthGetAccessToken"
+  ]
+}
