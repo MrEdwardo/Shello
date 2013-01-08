@@ -3,21 +3,12 @@
 // to the currently open card on Trello.com
 
 var oauth = chrome.extension.getBackgroundPage().oauth;
+oauth.authorize(onAuthorized);
 
 chrome.tabs.getSelected(null,function(tab) {
-    var cardId = getIdFromCard(tab.url);
-    switch(cardId)
-    {
-      case -1:
-        document.body.appendChild(document.createTextNode("This isn't a Trello card."));
-        break;
-      default:
-        document.body.appendChild(document.createTextNode("Card ID = " + cardId));
-        break;
-    }
+    //var cardId = getIdFromCard(tab.url);
+    getStoryIdFromCard(tab.url);
 });
-
-oauth.authorize(onAuthorized);
 
 function onAuthorized() {
   var url = 'https://trello.com/1/members/my/boards';
@@ -28,31 +19,47 @@ function onAuthorized() {
 };
 
 function callback(resp, xhr) {
-  
-  var stringy = JSON.stringify(resp);
   var collection = jQuery.parseJSON(resp);
-
+  var boards = [];
 
   for(var i in collection) {
-    console.log(collection[i]);
+    //console.log(collection[i]); DEBUG
+    if(collection[i].hasOwnProperty('name')) {
+      var value = collection[i].name;
+      if(value.toLowerCase().indexOf('stories') != -1) {
+        //board name contains 'stories'
+        boards.push(collection[i]); //add to array
+      }
+    }
   }
-
-
 };
 
 function getIdFromCard(url) {
-
+  if(url.indexOf('https://trello.com') == -1){
+    return -1;
+  }
   var split = url.split("/");
-  var cardId = split[split.length - 1];
+  var cardId = split[split.length - 2];
 
-  if(url.indexOf("trello.com") != -1) { // check if we're on trello.com
-    if(cardId.length < 5) {             // check for a reasonable length ID
+    if(cardId.length > 10) { // check for a reasonable length ID
       return cardId;
     }
-  }
   return -1;
 }
 
-function getStoryIdFromCard() {
-  return 0;
+function getStoryIdFromCard(url) {
+  var storyId = url.match(/\[(\d+\.?\d*)\]/);
+  //extract card ID from the url
+  cardGuid = getIdFromCard(url);
+  var requestUrl = 'https://trello.com/1/cards/' + cardGuid + '?fields=name';
+  var request = {
+    'method': 'GET',
+  };
+  //get the card object:
+  oauth.sendSignedRequest(requestUrl, callback2, request);
+}
+
+function callback2(resp, xhr) {
+  var card = jQuery.parseJSON(resp);
+  var name = card.name;
 }
