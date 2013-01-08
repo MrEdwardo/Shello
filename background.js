@@ -13,24 +13,20 @@ var oauth = ChromeExOAuth.initBackgroundPage({
 });
 
 
-oauth.authorize(function() {
-  // ... Ready to fetch private data ...
-  var test = 'blah';
-});
-
 function callback(resp, xhr) {
   // ... Process text response ...
 };
 
 function onAuthorized() {
-  var url = 'https://docs.google.com/feeds/default/private/full';
+  var url = 'https://trello.com/1/members/my/boards';
   var request = {
     'method': 'GET',
-    'parameters': {'alt': 'json'}
   };
 
-  // Send: GET https://docs.google.com/feeds/default/private/full?alt=json
   oauth.sendSignedRequest(url, callback, request);
+
+  // Send: GET https://docs.google.com/feeds/default/private/full?alt=json
+  //oauth.sendSignedRequest(url, callback, request);
 };
 
 oauth.authorize(onAuthorized);

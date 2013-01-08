@@ -2,12 +2,7 @@
 // A Chrome extension to display information relevant
 // to the currently open card on Trello.com
 
-var oAuthServiceName = "Ed's Trello Extension";
-var consumerSecret = "efe366361c4d944f012c7bd4946326d4bb868fba7acdde8e0129842d61b4586a";
-var consumerKey = "f29cb82a057935a1d481e3ea69e6ff74";
-
-chrome.extension.getBackgroundPage();
-
+var oauth = chrome.extension.getBackgroundPage().oauth;
 
 chrome.tabs.getSelected(null,function(tab) {
     var cardId = getIdFromCard(tab.url);
@@ -21,6 +16,29 @@ chrome.tabs.getSelected(null,function(tab) {
         break;
     }
 });
+
+oauth.authorize(onAuthorized);
+
+function onAuthorized() {
+  var url = 'https://trello.com/1/members/my/boards';
+  var request = {
+    'method': 'GET',
+  };
+  oauth.sendSignedRequest(url, callback, request);
+};
+
+function callback(resp, xhr) {
+  
+  var stringy = JSON.stringify(resp);
+  var collection = jQuery.parseJSON(resp);
+
+
+  for(var i in collection) {
+    console.log(collection[i]);
+  }
+
+
+};
 
 function getIdFromCard(url) {
 
@@ -36,6 +54,5 @@ function getIdFromCard(url) {
 }
 
 function getStoryIdFromCard() {
-
   return 0;
 }
