@@ -10,9 +10,12 @@
   "background": {
     "page": "background.html"
   },
-  "permissions": [ "tabs", "https://docs.google.com/feeds/*",
+  "permissions": [
+  "tabs",
+  "https://www.google.com/",
   "https://trello.com/1/OAuthGetRequestToken",
   "https://trello.com/1/OAuthAuthorizeToken",
-  "https://trello.com/1/OAuthGetAccessToken"
+  "https://trello.com/1/OAuthGetAccessToken",
+  "https://trello.com/*"
   ]
 }
