@@ -32,7 +32,7 @@ function getCurrentCardObject(url) {
 
 function getCard_Callback(resp, xhr, boardGuid) {
   var card = jQuery.parseJSON(resp);
-  var name = card.name;
+  var name = card.name.toLowerCase();
   var regex = name.match(/\[(s\d+s)\]/);
   var storyId = null;
 
@@ -95,13 +95,13 @@ function findMatchingStoryCard(cards, storyId){
 
 // OUTPUT / HTML BASED FUNCTIONS____________
 function outputStoryInfoToPopup(card){
-  var container = document.createElement('div');
-  container.className = "container";
-  var containerClose = document.createElement('/div');
+  //var container = document.createElement('div');
+  //container.className = "container";
+  //var containerClose = document.createElement('/div');
 
 
   var title = document.createElement('h4');
-  title.innerHTML = 'Task belongs to:';
+  title.innerHTML = 'Parent story:';
   var a = document.createElement('a');
   a.title = card.name;
   a.innerHTML = a.title;
@@ -109,10 +109,10 @@ function outputStoryInfoToPopup(card){
   a.onclick = function(){chrome.tabs.create({url: card.url})};
   //var text = document.createTextNode(card.name);
 
-  document.body.appendChild(container);
+  //$('#container').text('blah blah');
+
   document.body.appendChild(title);
   document.body.appendChild(a);
-  document.body.appendChild(containerClose);
 }
 
 function outputErrorMessageToPopup(message){
