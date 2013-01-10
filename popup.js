@@ -13,7 +13,12 @@ function onAuthorized() {
 };
 
 function getCurrentCardObject(url) {
-  //var storyId = url.match(/\[(\d+\.?\d*)\]/);
+
+  if(!userIsViewingCard(url)){
+    outputErrorMessageToPopup("Open a Trello card to view Story information.");
+    return;
+  }
+
   //extract card ID from the url
   var cardId = getCardIdFromUrl(url);
   var boardGuid = getBoardIdFromUrl(url);
@@ -82,22 +87,42 @@ function findMatchingStoryCard(cards, storyId){
   for(var card in cards){
     var name = cards[card].name;
     if(name.indexOf(storyId) != -1){
-      // this is our story card!!
-      console.log("FOUND THE BLOODY CARD: " + cards[card].name);
-      var text = document.createTextNode(cards[card].name);
-      document.body.appendChild(text);
+      outputStoryInfoToPopup(cards[card]);
+      return;
     }
   }
 }
 
+// OUTPUT / HTML BASED FUNCTIONS____________
+function outputStoryInfoToPopup(card){
+  var container = document.createElement('div');
+  container.className = "container";
+  var containerClose = document.createElement('/div');
+
+
+  var title = document.createElement('h4');
+  title.innerHTML = 'Task belongs to:';
+  var a = document.createElement('a');
+  a.title = card.name;
+  a.innerHTML = a.title;
+  a.href = card.url;
+  a.onclick = function(){chrome.tabs.create({url: card.url})};
+  //var text = document.createTextNode(card.name);
+
+  document.body.appendChild(container);
+  document.body.appendChild(title);
+  document.body.appendChild(a);
+  document.body.appendChild(containerClose);
+}
+
+function outputErrorMessageToPopup(message){
+  document.body.appendChild(document.createTextNode(message));
+}
+
 // URL BASED FUNCTIONS__________________
 function getCardIdFromUrl(url) {
-  if(url.indexOf('https://trello.com') == -1){
-    return -1;
-  }
   var split = url.split("/");
   var cardId = split[split.length - 1];
-
     if(cardId.length < 5) { // check for a reasonable length ID
       return cardId;
     }
@@ -105,13 +130,21 @@ function getCardIdFromUrl(url) {
 }
 
 function getBoardIdFromUrl(url) {
-  if(url.indexOf('https://trello.com') == -1){
-    return -1;
-  }
   var split = url.split("/");
   var boardId = split[split.length - 2];
   if(boardId.length > 10) {
     return boardId;
   }
   return -1;
+}
+
+function userIsViewingCard(url) {
+  if(url.indexOf('https://trello.com') == -1){
+    return false;
+  }
+  var split = url.split("/");
+  if(split.length < 7){
+    return false;
+  }
+  return true;
 }
