@@ -1,6 +1,6 @@
 {
   "name": "Shello",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "manifest_version": 2,
   "description": "An extension to display related User Story data from tasks on Trello.com.",
   "browser_action": {
