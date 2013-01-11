@@ -3,7 +3,6 @@
 // to the currently open card on Trello.com
 
 var oauth = chrome.extension.getBackgroundPage().oauth;
-//var storyId = null;
 oauth.authorize(onAuthorized);
 
 function onAuthorized() {
@@ -33,11 +32,13 @@ function getCurrentCardObject(url) {
 function getCard_Callback(resp, xhr, boardGuid) {
   var card = jQuery.parseJSON(resp);
   var name = card.name.toLowerCase();
-  var regex = name.match(/\[(s\d+s)\]/);
+  var regex = name.match(/\[(s\d+s)\]/); //look for the story ID
   var storyId = null;
 
-  if(regex[1]!= null){
-    storyId = regex[1];//.replace(/s/gi, '');
+  if(regex != null && regex[1]!= null){
+    storyId = regex[1];
+  } else {
+    outputErrorMessageToPopup("Couldn't find a story ID for this card.")
   }
 
   // get current board name:
@@ -91,26 +92,38 @@ function findMatchingStoryCard(cards, storyId){
       return;
     }
   }
+  outputErrorMessageToPopup("Couldn't find a matching user story card.");
 }
 
 // OUTPUT / HTML BASED FUNCTIONS____________
 function outputStoryInfoToPopup(card){
 
   $('#loader').hide();
+  //title text
   var title = document.createElement('h4');
   title.innerHTML = 'Parent story:';
+  //card name (link)
   var a = document.createElement('a');
+  //card description
+  var desc = document.createElement('p');
+  desc.innerHTML = card.desc;
+  desc.className = 'descriptionText';
   a.title = card.name;
   a.innerHTML = a.title;
   a.href = card.url;
-  a.onclick = function(){chrome.tabs.create({url: card.url})};
+  a.target = "_blank";
 
-  document.body.appendChild(title);
-  document.body.appendChild(a);
+  //output this stuff:
+  $('#content').append(title);
+  $('#content').append(a);
+  $('#content').append(document.createElement('br'));
+  $('#content').append(document.createElement('br'));
+  $('#content').append(desc);
 }
 
 function outputErrorMessageToPopup(message){
-  document.body.appendChild(document.createTextNode(message));
+  $('#loader').hide();
+  $('#content').append(document.createTextNode(message));
 }
 
 // URL BASED FUNCTIONS__________________

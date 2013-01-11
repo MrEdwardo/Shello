@@ -9,8 +9,6 @@
         padding: 10px;
         overflow-x:hidden;
       }
-
-
       img {
         margin:5px;
         border:2px solid black;
@@ -24,6 +22,17 @@
         background-repeat: no-repeat;
         background-position: center;
       }
+      #feedbackContainer {
+        float: right;
+        text-align: right;
+      }
+      .descriptionText {
+        font-size: 10px;
+      }
+      .feedbackLink {
+        text-align: right;
+        font-size: 10px;
+      }
     </style>
 
     <!-- JavaScript and HTML must be in separate files for security. -->
@@ -33,6 +42,11 @@
   <body>
     <div id="loader">
       <p>Finding user story card...
+    </div>
+    <div id="content">
+    </div>
+    <div id="feedbackContainer">
+      <a class='feedbackLink' href='mailto:eshelley@rm.com' target="_blank">FEEDBACK</a>
     </div>
   </body>
 </html>
