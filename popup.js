@@ -22,7 +22,7 @@ function getCurrentCardObject(url) {
   var cardId = getCardIdFromUrl(url);
   var boardGuid = getBoardIdFromUrl(url);
 
-  if(cardId != -1 && boardId != null) {
+  if(cardId != -1 && boardGuid != null) {
     var requestUrl = 'https://api.trello.com/1/boards/' + boardGuid + '/cards/' + cardId;
     var request = {
       'method': 'GET',
@@ -89,19 +89,29 @@ function findMatchingStoriesBoard(currentBoard, potentialBoards, storyId) {
 }
 
 function findMatchingStoryCard(cards, storyId){
-
   for(var card in cards){
     var name = cards[card].name;
     if(name.indexOf(storyId) != -1){
-      outputStoryInfoToPopup(cards[card]);
+      getListNameForStory(cards[card]);
       return;
     }
   }
   outputErrorMessageToPopup("Couldn't find a matching user story card.");
 }
 
+function getListNameForStory(card) {
+  var listUrl = 'https://trello.com/1/lists/' + card.idList;
+  var request = {
+        'method': 'GET',
+  };
+  oauth.sendSignedRequest(listUrl, function(resp, xhr){
+    var list = jQuery.parseJSON(resp);
+    outputStoryInfoToPopup(card, list);
+  });
+}
+
 // OUTPUT / HTML BASED FUNCTIONS____________
-function outputStoryInfoToPopup(card){
+function outputStoryInfoToPopup(card, list){
 
   $('#loader').hide();
   //title text
@@ -109,14 +119,17 @@ function outputStoryInfoToPopup(card){
   title.innerHTML = 'Parent story:';
   //card name (link)
   var a = document.createElement('a');
-  //card description
-  var desc = document.createElement('p');
-  desc.innerHTML = card.desc;
-  desc.className = 'descriptionText';
   a.title = card.name;
   a.innerHTML = a.title;
   a.href = card.url;
   a.target = "_blank";
+  //card description
+  var desc = document.createElement('p');
+  desc.innerHTML = card.desc;
+  desc.className = 'descriptionText';
+  //card's list
+  var listName = document.createElement('p');
+  listName.innerHTML = "This story is <b>" + list.name + "</b>";
 
   //output this stuff:
   $('#content').append(title);
@@ -124,6 +137,7 @@ function outputStoryInfoToPopup(card){
   $('#content').append(document.createElement('br'));
   $('#content').append(document.createElement('br'));
   $('#content').append(desc);
+  $('#content').append(listName);
 }
 
 function outputErrorMessageToPopup(message){
