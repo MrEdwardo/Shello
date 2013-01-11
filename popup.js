@@ -21,12 +21,17 @@ function getCurrentCardObject(url) {
   //extract card ID from the url
   var cardId = getCardIdFromUrl(url);
   var boardGuid = getBoardIdFromUrl(url);
-  var requestUrl = 'https://api.trello.com/1/boards/' + boardGuid + '/cards/' + cardId;
-  var request = {
-    'method': 'GET',
-  };
-  //get the card object:
-  oauth.sendSignedRequest(requestUrl, function(resp, xhr){getCard_Callback(resp, xhr, boardGuid)}, request);
+
+  if(cardId != -1 && boardId != null) {
+    var requestUrl = 'https://api.trello.com/1/boards/' + boardGuid + '/cards/' + cardId;
+    var request = {
+      'method': 'GET',
+    };
+    //get the card object:
+    oauth.sendSignedRequest(requestUrl, function(resp, xhr){getCard_Callback(resp, xhr, boardGuid)}, request);
+  } else {
+    outputErrorMessageToPopup("Couldn't find any board or card information.");
+  }
 }
 
 function getCard_Callback(resp, xhr, boardGuid) {
