@@ -95,11 +95,8 @@ function findMatchingStoryCard(cards, storyId){
 
 // OUTPUT / HTML BASED FUNCTIONS____________
 function outputStoryInfoToPopup(card){
-  //var container = document.createElement('div');
-  //container.className = "container";
-  //var containerClose = document.createElement('/div');
 
-
+  $('#loader').hide();
   var title = document.createElement('h4');
   title.innerHTML = 'Parent story:';
   var a = document.createElement('a');
@@ -107,9 +104,6 @@ function outputStoryInfoToPopup(card){
   a.innerHTML = a.title;
   a.href = card.url;
   a.onclick = function(){chrome.tabs.create({url: card.url})};
-  //var text = document.createTextNode(card.name);
-
-  //$('#container').text('blah blah');
 
   document.body.appendChild(title);
   document.body.appendChild(a);
