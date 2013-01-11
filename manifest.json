@@ -1,6 +1,6 @@
 {
   "name": "Shello",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "manifest_version": 2,
   "description": "An extension to display related User Story data from tasks on Trello.com.",
   "browser_action": {
@@ -12,7 +12,6 @@
   },
   "permissions": [
   "tabs",
-  "https://www.google.com/",
   "https://trello.com/1/OAuthGetRequestToken",
   "https://trello.com/1/OAuthAuthorizeToken",
   "https://trello.com/1/OAuthGetAccessToken",
