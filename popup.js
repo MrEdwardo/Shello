@@ -4,6 +4,7 @@
 
 var oauth = chrome.extension.getBackgroundPage().oauth;
 oauth.authorize(onAuthorized);
+var redmineKey = "2be9f291e4b513eaebfa037e03bbb593be185212";
 
 function onAuthorized() {
   chrome.tabs.getSelected(null,function(tab) {
@@ -21,17 +22,50 @@ function getCurrentCardObject(url) {
   //extract card ID from the url
   var cardId = getCardIdFromUrl(url);
   var boardGuid = getBoardIdFromUrl(url);
-
   if(cardId != -1 && boardGuid != null) {
-    var requestUrl = 'https://api.trello.com/1/boards/' + boardGuid + '/cards/' + cardId;
-    var request = {
-      'method': 'GET',
-    };
-    //get the card object:
-    oauth.sendSignedRequest(requestUrl, function(resp, xhr){getCard_Callback(resp, xhr, boardGuid)}, request);
+
+  var requestUrl = 'https://api.trello.com/1/boards/' + boardGuid + '/cards/' + cardId;
+  var request = {
+    'method': 'GET',
+  };
+  //get the card object:
+  oauth.sendSignedRequest(requestUrl, function(resp, xhr){getCard_Callback(resp, xhr, boardGuid)}, request);
+
   } else {
     outputErrorMessageToPopup("Couldn't find any board or card information.");
+    return;
   }
+}
+
+function doRedmineStuff(storyId) {
+  var requestUrl = "https://redmine.rm.com/redmine/issues.json?&key=" + redmineKey;
+
+  $.ajax({
+    url: requestUrl,
+    context: document.body
+  }).done(function(data) {
+
+    for(var index in data.issues){
+      var issue = data.issues[index];
+
+      for(var field in issue.custom_fields){
+        var customField = issue.custom_fields[field];
+
+        if(customField.id == 54){
+          if(customField.value != "" && customField.value.indexOf(storyId) != -1) {
+            var foundIt = "";
+          }
+        }
+      }
+    }
+
+
+  });
+
+}
+
+function doTrelloStuff() {
+
 }
 
 function getCard_Callback(resp, xhr, boardGuid) {
@@ -42,8 +76,14 @@ function getCard_Callback(resp, xhr, boardGuid) {
 
   if(regex != null && regex[1]!= null){
     storyId = regex[1];
+
+    doRedmineStuff(storyId);
+    return;
+
+
   } else {
-    outputErrorMessageToPopup("Couldn't find a story ID for this card.")
+    outputErrorMessageToPopup("Couldn't find a story ID for this card.");
+    return;
   }
 
   // get current board name:

@@ -15,6 +15,7 @@
   "https://trello.com/1/OAuthGetRequestToken",
   "https://trello.com/1/OAuthAuthorizeToken",
   "https://trello.com/1/OAuthGetAccessToken",
-  "https://trello.com/*"
+  "https://trello.com/*",
+  "https://redmine.rm.com/*"
   ]
 }
