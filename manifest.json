@@ -12,6 +12,7 @@
   },
   "permissions": [
   "tabs",
+  "storage",
   "https://trello.com/1/OAuthGetRequestToken",
   "https://trello.com/1/OAuthAuthorizeToken",
   "https://trello.com/1/OAuthGetAccessToken",

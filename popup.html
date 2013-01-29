@@ -22,6 +22,9 @@
         background-repeat: no-repeat;
         background-position: center;
       }
+      #content {
+        float:none;
+      }
       #feedbackContainer {
         float: right;
         text-align: right;
@@ -33,6 +36,10 @@
         text-align: right;
         font-size: 10px;
       }
+      .toggleButton {
+        margin: 5px;
+        text-align: left;
+      }
     </style>
 
     <!-- JavaScript and HTML must be in separate files for security. -->
@@ -41,14 +48,25 @@
     <script src="popup.js"></script>
   </head>
   <body>
-    <div id="loader">
-      <p>Finding user story card...
+    <div class="toggleButton">
+      <div class="btn-group" data-toggle="buttons-radio">
+        <button id="modeTrello" type="button" class="btn btn-secondary" >Trello</button>
+        <button id="modeRedmine" type="button" class="btn btn-secondary" >Redmine</button>
+      </div>
+      <br/><br/>
     </div>
+
+    <div id="loader">
+      <p>Finding user story card... 
+    </div>
+
     <div id="content">
     </div>
-    <div id="feedbackContainer">
 
-      <a class='feedbackLink' href='mailto:eshelley@rm.com?subject=Shello' target="_blank">FEEDBACK</a>
+
+    <div id="feedbackContainer">
+      <a class='feedbackLink' href='mailto:eshelley@rm.com?subject=Shello' target="_blank">FEEDBACK
+      </a>
     </div>
   </body>
 </html>

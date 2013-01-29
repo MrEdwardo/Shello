@@ -2,7 +2,10 @@
 // A Chrome extension to display information relevant
 // to the currently open card on Trello.com
 
+setMode();
+
 var oauth = chrome.extension.getBackgroundPage().oauth;
+var mode = "";
 oauth.authorize(onAuthorized);
 var redmineKey = "2be9f291e4b513eaebfa037e03bbb593be185212";
 
@@ -11,6 +14,31 @@ function onAuthorized() {
     getCurrentCardObject(tab.url);
   });
 };
+
+function setMode() {
+
+  var btnTrello = document.getElementById('modeTrello');
+  var btnRedmine = document.getElementById('modeRedmine');
+  btnTrello.setAttribute('onclick', 'modeTrelloClick');
+  btnRedmine.setAttribute('onclick', 'modeRedmineClick');
+
+
+  chrome.storage.sync.get('storyMode', function(items) {
+    // Notify that we saved.
+    if(items != null && items['storyMode'] != null) {
+      if(items['storyMode'] === 'trello'){
+        mode = 'trello';
+        $('#modeTrello').button('toggle');
+      } else if(items['storyMode'] === 'redmine') {
+        mode = 'redmine';
+        $('#modeRedmine').button('toggle');
+      }
+    }
+  });
+
+
+}
+
 
 function getCurrentCardObject(url) {
 
@@ -37,8 +65,8 @@ function getCurrentCardObject(url) {
   }
 }
 
-function doRedmineStuff(storyId) {
-  var requestUrl = "https://redmine.rm.com/redmine/issues.json?&key=" + redmineKey;
+function findStoryFromRedmine(storyId) {
+  var requestUrl = "https://redmine.rm.com/redmine/issues.json?&tracker_id=12&key=" + redmineKey;
 
   $.ajax({
     url: requestUrl,
@@ -48,20 +76,21 @@ function doRedmineStuff(storyId) {
     for(var index in data.issues){
       var issue = data.issues[index];
 
-      for(var field in issue.custom_fields){
-        var customField = issue.custom_fields[field];
+      if(issue.project.name.toUpperCase() === "RM-PEOPLEDIRECTORY") { // match project name to board name
 
-        if(customField.id == 54){
-          if(customField.value != "" && customField.value.indexOf(storyId) != -1) {
-            var foundIt = "";
+        for(var field in issue.custom_fields){
+          var customField = issue.custom_fields[field];
+          //console.log(customField.name);
+
+          if(customField.name.toLowerCase() === "existing story id" ){ // this is the user story field ID
+            if(customField.value != "" && customField.value.indexOf(storyId) != -1) {
+              outputRedmineStoryInfoToPopup(issue.subject, "https://redmine.rm.com/redmine/issues/" + issue.id, "");
+            }
           }
         }
       }
     }
-
-
   });
-
 }
 
 function doTrelloStuff() {
@@ -77,7 +106,7 @@ function getCard_Callback(resp, xhr, boardGuid) {
   if(regex != null && regex[1]!= null){
     storyId = regex[1];
 
-    doRedmineStuff(storyId);
+    findStoryFromRedmine(storyId);
     return;
 
 
@@ -146,12 +175,32 @@ function getListNameForStory(card) {
   };
   oauth.sendSignedRequest(listUrl, function(resp, xhr){
     var list = jQuery.parseJSON(resp);
-    outputStoryInfoToPopup(card, list);
+    outputTrelloStoryInfoToPopup(card, list);
   });
 }
 
 // OUTPUT / HTML BASED FUNCTIONS____________
-function outputStoryInfoToPopup(card, list){
+
+function outputRedmineStoryInfoToPopup(name, url, status) {
+  $('#loader').hide();
+  //title text
+  var title = document.createElement('h4');
+  title.innerHTML = 'Parent story:';
+  //card name (link)
+  var a = document.createElement('a');
+  a.title = name;
+  a.innerHTML = name;
+  a.href = url;
+  a.target = "_blank";
+
+  //output this stuff:
+  $('#content').append(title);
+  $('#content').append(a);
+
+}
+
+
+function outputTrelloStoryInfoToPopup(card, list){
 
   $('#loader').hide();
   //title text
@@ -213,4 +262,18 @@ function userIsViewingCard(url) {
     return false;
   }
   return true;
+}
+
+function modeTrelloClick() {
+  mode = 'trello';
+  chrome.storage.sync.set({'storyMode': 'trello'}, function() {
+    console.log('Settings saved as Trello');
+  });
+}
+
+function modeRedmineClick() {
+  mode = 'redmine';
+  chrome.storage.sync.set({'storyMode': 'redmine'}, function() {
+    console.log('Settings saved as Redmine');
+  });
 }
