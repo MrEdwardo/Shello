@@ -21,7 +21,6 @@ function onAuthorized() {
 
 function getModePrefs() {
   chrome.storage.sync.get('storyMode', function(items) {
-    // Notify that we saved.
     if(items != null && items['storyMode'] != null) {
       if(items['storyMode'] === 'trello'){
         $('#modeTrello').addClass('active');
@@ -33,6 +32,9 @@ function getModePrefs() {
         mode ='redmine';
       }
       getModePrefs_Complete();
+    } else {
+      //set to Trello mode initially:
+      modeTrelloClick();
     }
   });
 }
