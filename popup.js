@@ -1,13 +1,30 @@
 // Copyright (c) 2012 Ed Shelley
 // A Chrome extension to display information relevant
 // to the currently open card on Trello.com
-
-setMode();
-
-var oauth = chrome.extension.getBackgroundPage().oauth;
-var mode = "";
-oauth.authorize(onAuthorized);
 var redmineKey = "2be9f291e4b513eaebfa037e03bbb593be185212";
+var mode = "";
+
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelector('#modeTrello').addEventListener('click', modeTrelloClick);
+  document.querySelector('#modeRedmine').addEventListener('click', modeRedmineClick);
+});
+
+
+setMode(); // set whether we're in Trello or Redmine mode
+
+function setMode_Complete() {
+  $('#loader').show();
+  clearErrorMessages();
+  if(mode === 'trello') {
+  console.log("Proceeding in Trello mode...");
+  var oauth = chrome.extension.getBackgroundPage().oauth;
+  oauth.authorize(onAuthorized);
+
+  } else if (mode === 'redmine') {
+    console.log("Proceeding in Redmine mode...");
+  }
+}
+
 
 function onAuthorized() {
   chrome.tabs.getSelected(null,function(tab) {
@@ -17,26 +34,21 @@ function onAuthorized() {
 
 function setMode() {
 
-  var btnTrello = document.getElementById('modeTrello');
-  var btnRedmine = document.getElementById('modeRedmine');
-  btnTrello.setAttribute('onclick', 'modeTrelloClick');
-  btnRedmine.setAttribute('onclick', 'modeRedmineClick');
-
-
   chrome.storage.sync.get('storyMode', function(items) {
     // Notify that we saved.
     if(items != null && items['storyMode'] != null) {
       if(items['storyMode'] === 'trello'){
+        $('#modeTrello').addClass('active');
+        $('#modeRedmine').removeClass('active');
         mode = 'trello';
-        $('#modeTrello').button('toggle');
       } else if(items['storyMode'] === 'redmine') {
-        mode = 'redmine';
-        $('#modeRedmine').button('toggle');
+        $('#modeRedmine').addClass('active');
+        $('#modeTrello').removeClass('active');
+        mode ='redmine';
       }
+      setMode_Complete();
     }
   });
-
-
 }
 
 
@@ -91,10 +103,6 @@ function findStoryFromRedmine(storyId) {
       }
     }
   });
-}
-
-function doTrelloStuff() {
-
 }
 
 function getCard_Callback(resp, xhr, boardGuid) {
@@ -231,7 +239,12 @@ function outputTrelloStoryInfoToPopup(card, list){
 
 function outputErrorMessageToPopup(message){
   $('#loader').hide();
+  clearErrorMessages();
   $('#content').append(document.createTextNode(message));
+}
+
+function clearErrorMessages() {
+  $('#content').empty();
 }
 
 // URL BASED FUNCTIONS__________________
@@ -268,6 +281,9 @@ function modeTrelloClick() {
   mode = 'trello';
   chrome.storage.sync.set({'storyMode': 'trello'}, function() {
     console.log('Settings saved as Trello');
+    $('#modeTrello').addClass('active');
+    $('#modeRedmine').removeClass('active');
+    setMode_Complete();
   });
 }
 
@@ -275,5 +291,8 @@ function modeRedmineClick() {
   mode = 'redmine';
   chrome.storage.sync.set({'storyMode': 'redmine'}, function() {
     console.log('Settings saved as Redmine');
+    $('#modeRedmine').addClass('active');
+    $('#modeTrello').removeClass('active');
+    setMode_Complete();
   });
 }
