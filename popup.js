@@ -195,6 +195,7 @@ function getListNameForStory(card) {
 
 function outputRedmineStoryInfoToPopup(name, url, status, description) {
   $('#loader').hide();
+  $('#content').hide();
   //title text
   var title = document.createElement('h4');
   title.innerHTML = 'Parent story:';
@@ -215,13 +216,15 @@ function outputRedmineStoryInfoToPopup(name, url, status, description) {
   $('#content').append(document.createElement('br'));
   $('#content').append(document.createElement('br'));
   $('#content').append(desc);
-
+  $('#content').fadeIn();
 }
 
 
 function outputTrelloStoryInfoToPopup(card, list){
 
   $('#loader').hide();
+  $('#content').hide();
+
   //title text
   var title = document.createElement('h4');
   title.innerHTML = 'Parent story:';
@@ -246,12 +249,15 @@ function outputTrelloStoryInfoToPopup(card, list){
   $('#content').append(document.createElement('br'));
   $('#content').append(desc);
   $('#content').append(listName);
+  $('#content').fadeIn();
 }
 
 function outputErrorMessageToPopup(message){
   $('#loader').hide();
   clearErrorMessages();
+  $('#content').hide();
   $('#content').append(document.createTextNode(message));
+  $('#content').fadeIn();
 }
 
 function clearErrorMessages() {
