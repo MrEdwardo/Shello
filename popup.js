@@ -1,14 +1,19 @@
 // Copyright (c) 2012 Ed Shelley
 // A Chrome extension to display information relevant
 // to the currently open card on Trello.com
-var redmineKey = "2be9f291e4b513eaebfa037e03bbb593be185212";
+var redmineKey = "";
 var redmineReqUrl = "https://redmine.rm.com/redmine/issues.json?&tracker_id=12&status_id=*&key=";
 var mode = "";
 var oauth = chrome.extension.getBackgroundPage().oauth;
 
+
+
 document.addEventListener('DOMContentLoaded', function () {
+  $('#api-warning').hide();
+  $('#loader').hide();
   document.querySelector('#modeTrello').addEventListener('click', modeTrelloClick);
   document.querySelector('#modeRedmine').addEventListener('click', modeRedmineClick);
+  document.querySelector('#btnApiSubmit').addEventListener('click', btnApiSubmitClick);
 });
 
 getModePrefs(); // set whether we're in Trello or Redmine mode
@@ -22,6 +27,7 @@ function onAuthorized() {
 function getModePrefs() {
   chrome.storage.sync.get('storyMode', function(items) {
     if(items != null && items['storyMode'] != null) {
+
       if(items['storyMode'] === 'trello'){
         $('#modeTrello').addClass('active');
         $('#modeRedmine').removeClass('active');
@@ -31,15 +37,40 @@ function getModePrefs() {
         $('#modeTrello').removeClass('active');
         mode ='redmine';
       }
-      getModePrefs_Complete();
+
+      // Get User API key from prefs if it's there:
+      chrome.storage.sync.get('userApiKey', function(items) {
+        if(items != null && items['userApiKey'] != null) {
+          redmineKey = items['userApiKey'];
+        }
+        getModePrefs_Complete();
+      });
+
+      
     } else {
-      //set to Trello mode initially:
+      // First run: set to Trello mode initially:
       modeTrelloClick();
     }
   });
 }
 
+function saveKeyToPrefs(key) {
+  chrome.storage.sync.set({'userApiKey' : key }, function(){
+    var test = "blah";
+  });
+}
+
 function getModePrefs_Complete() {
+
+  if(mode === 'redmine') {
+    var testing = 'ha';
+    if(redmineKey.length < 5) {
+      //show the prompt
+      $('#api-warning').fadeIn();
+      return;
+    }
+  }
+
   $('#loader').show();
   clearErrorMessages();
   if(mode === 'trello') {
@@ -296,6 +327,7 @@ function userIsViewingCard(url) {
 
 function modeTrelloClick() {
   mode = 'trello';
+  $('#api-warning').hide();
   chrome.storage.sync.set({'storyMode': 'trello'}, function() {
     console.log('Settings saved as Trello');
     $('#modeTrello').addClass('active');
@@ -312,4 +344,14 @@ function modeRedmineClick() {
     $('#modeTrello').removeClass('active');
     getModePrefs_Complete();
   });
+}
+
+function btnApiSubmitClick(){
+  //save the api key
+  if($('#appendedInputButton').val().length > 5) {
+    redmineKey = $('#appendedInputButton').val();
+    saveKeyToPrefs(redmineKey);
+    $('#api-warning').hide();
+    getModePrefs_Complete();
+  }
 }
