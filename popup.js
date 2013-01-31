@@ -2,29 +2,16 @@
 // A Chrome extension to display information relevant
 // to the currently open card on Trello.com
 var redmineKey = "2be9f291e4b513eaebfa037e03bbb593be185212";
+var redmineReqUrl = "https://redmine.rm.com/redmine/issues.json?&tracker_id=12&status_id=*&key=";
 var mode = "";
+var oauth = chrome.extension.getBackgroundPage().oauth;
 
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelector('#modeTrello').addEventListener('click', modeTrelloClick);
   document.querySelector('#modeRedmine').addEventListener('click', modeRedmineClick);
 });
 
-
-setMode(); // set whether we're in Trello or Redmine mode
-
-function setMode_Complete() {
-  $('#loader').show();
-  clearErrorMessages();
-  if(mode === 'trello') {
-  console.log("Proceeding in Trello mode...");
-  var oauth = chrome.extension.getBackgroundPage().oauth;
-  oauth.authorize(onAuthorized);
-
-  } else if (mode === 'redmine') {
-    console.log("Proceeding in Redmine mode...");
-  }
-}
-
+getModePrefs(); // set whether we're in Trello or Redmine mode
 
 function onAuthorized() {
   chrome.tabs.getSelected(null,function(tab) {
@@ -32,8 +19,7 @@ function onAuthorized() {
   });
 };
 
-function setMode() {
-
+function getModePrefs() {
   chrome.storage.sync.get('storyMode', function(items) {
     // Notify that we saved.
     if(items != null && items['storyMode'] != null) {
@@ -46,11 +32,22 @@ function setMode() {
         $('#modeTrello').removeClass('active');
         mode ='redmine';
       }
-      setMode_Complete();
+      getModePrefs_Complete();
     }
   });
 }
 
+function getModePrefs_Complete() {
+  $('#loader').show();
+  clearErrorMessages();
+  if(mode === 'trello') {
+  console.log("Proceeding in Trello mode...");
+  } else if (mode === 'redmine') {
+    console.log("Proceeding in Redmine mode...");  
+  }
+
+  oauth.authorize(onAuthorized);
+}
 
 function getCurrentCardObject(url) {
 
@@ -77,34 +74,6 @@ function getCurrentCardObject(url) {
   }
 }
 
-function findStoryFromRedmine(storyId) {
-  var requestUrl = "https://redmine.rm.com/redmine/issues.json?&tracker_id=12&key=" + redmineKey;
-
-  $.ajax({
-    url: requestUrl,
-    context: document.body
-  }).done(function(data) {
-
-    for(var index in data.issues){
-      var issue = data.issues[index];
-
-      if(issue.project.name.toUpperCase() === "RM-PEOPLEDIRECTORY") { // match project name to board name
-
-        for(var field in issue.custom_fields){
-          var customField = issue.custom_fields[field];
-          //console.log(customField.name);
-
-          if(customField.name.toLowerCase() === "existing story id" ){ // this is the user story field ID
-            if(customField.value != "" && customField.value.indexOf(storyId) != -1) {
-              outputRedmineStoryInfoToPopup(issue.subject, "https://redmine.rm.com/redmine/issues/" + issue.id, "");
-            }
-          }
-        }
-      }
-    }
-  });
-}
-
 function getCard_Callback(resp, xhr, boardGuid) {
   var card = jQuery.parseJSON(resp);
   var name = card.name.toLowerCase();
@@ -113,11 +82,6 @@ function getCard_Callback(resp, xhr, boardGuid) {
 
   if(regex != null && regex[1]!= null){
     storyId = regex[1];
-
-    findStoryFromRedmine(storyId);
-    return;
-
-
   } else {
     outputErrorMessageToPopup("Couldn't find a story ID for this card.");
     return;
@@ -134,7 +98,16 @@ function getCard_Callback(resp, xhr, boardGuid) {
 function getCurrentBoard_Callback(resp, xhr, storyId){
   var board = jQuery.parseJSON(resp);
 
-  // Now look at user's boards for a match.
+  if(mode === 'trello') {
+    findStoryFromTrello(storyId, board);
+  } else if(mode === 'redmine') {
+    findStoryFromRedmine(storyId, board.id);
+  }
+  return;
+}
+
+function findStoryFromTrello(storyId, board){
+  // Now look at user's Trello boards for a match.
   var url = 'https://trello.com/1/members/my/boards';
   var request = {
     'method': 'GET',
@@ -143,7 +116,36 @@ function getCurrentBoard_Callback(resp, xhr, storyId){
     var boards = jQuery.parseJSON(resp);
     findMatchingStoriesBoard(board, boards, storyId);
   }, request);
+}
 
+function findStoryFromRedmine(storyId, boardName) {
+  var requestUrl = redmineReqUrl + redmineKey;
+
+  $.ajax({
+    url: requestUrl,
+    context: document.body
+  }).done(function(data) {
+    console.log("LOOKING FOR: " + storyId);
+    for(var index in data.issues){
+      var issue = data.issues[index];
+
+      if(issue.project.name.toUpperCase() === "RM-PEOPLEDIRECTORY") { // match project name to board name
+
+        for(var field in issue.custom_fields){
+          var customField = issue.custom_fields[field];
+
+          if(customField.name.toLowerCase() === "existing story id" ){ // this is the user story field ID
+            console.log(customField.value);
+            if(customField.value.toUpperCase().replace(' ', '') === storyId.toUpperCase()) {
+              outputRedmineStoryInfoToPopup(issue.subject, "https://redmine.rm.com/redmine/issues/" + issue.id, "", issue.description);
+              return;
+            }
+          }
+        }
+      }
+    }
+    outputErrorMessageToPopup("Couldn't find this user story in Redmine.")
+  });
 }
 
 function findMatchingStoriesBoard(currentBoard, potentialBoards, storyId) {
@@ -158,17 +160,17 @@ function findMatchingStoriesBoard(currentBoard, potentialBoards, storyId) {
       };
       oauth.sendSignedRequest(currentBoardUrl, function(resp, xhr){
         var cards = jQuery.parseJSON(resp);
-        findMatchingStoryCard(cards, storyId);
+        findMatchingStoryCard(cards, storyId, currentBoard);
       }, request);
     }
   }
   return null;
 }
 
-function findMatchingStoryCard(cards, storyId){
+function findMatchingStoryCard(cards, storyId, currentBoard){
   for(var card in cards){
     var name = cards[card].name;
-    if(name.indexOf(storyId) != -1){
+    if(name.indexOf(storyId) != -1 && currentBoard.id !== cards[card].idBoard){
       getListNameForStory(cards[card]);
       return;
     }
@@ -189,21 +191,28 @@ function getListNameForStory(card) {
 
 // OUTPUT / HTML BASED FUNCTIONS____________
 
-function outputRedmineStoryInfoToPopup(name, url, status) {
+function outputRedmineStoryInfoToPopup(name, url, status, description) {
   $('#loader').hide();
   //title text
   var title = document.createElement('h4');
   title.innerHTML = 'Parent story:';
-  //card name (link)
+  //story name (link)
   var a = document.createElement('a');
   a.title = name;
   a.innerHTML = name;
   a.href = url;
   a.target = "_blank";
+  //story description
+  var desc = document.createElement('p');
+  desc.innerHTML = description;
+  desc.className = 'descriptionText';  
 
   //output this stuff:
   $('#content').append(title);
   $('#content').append(a);
+  $('#content').append(document.createElement('br'));
+  $('#content').append(document.createElement('br'));
+  $('#content').append(desc);
 
 }
 
@@ -283,7 +292,7 @@ function modeTrelloClick() {
     console.log('Settings saved as Trello');
     $('#modeTrello').addClass('active');
     $('#modeRedmine').removeClass('active');
-    setMode_Complete();
+    getModePrefs_Complete();
   });
 }
 
@@ -293,6 +302,6 @@ function modeRedmineClick() {
     console.log('Settings saved as Redmine');
     $('#modeRedmine').addClass('active');
     $('#modeTrello').removeClass('active');
-    setMode_Complete();
+    getModePrefs_Complete();
   });
 }
