@@ -5,6 +5,7 @@ var redmineKey = "";
 var redmineReqUrl = "https://redmine.rm.com/redmine/issues.json?&tracker_id=12&status_id=*&key=";
 var mode = "";
 var oauth = chrome.extension.getBackgroundPage().oauth;
+var regexToMatchStoryId = /\{(s\d+s)\}/;
 
 
 
@@ -46,7 +47,7 @@ function getModePrefs() {
         getModePrefs_Complete();
       });
 
-      
+
     } else {
       // First run: set to Trello mode initially:
       modeTrelloClick();
@@ -76,7 +77,7 @@ function getModePrefs_Complete() {
   if(mode === 'trello') {
   console.log("Proceeding in Trello mode...");
   } else if (mode === 'redmine') {
-    console.log("Proceeding in Redmine mode...");  
+    console.log("Proceeding in Redmine mode...");
   }
 
   oauth.authorize(onAuthorized);
@@ -110,7 +111,7 @@ function getCurrentCardObject(url) {
 function getCard_Callback(resp, xhr, boardGuid) {
   var card = jQuery.parseJSON(resp);
   var name = card.name.toLowerCase();
-  var regex = name.match(/\[(s\d+s)\]/); //look for the story ID
+  var regex = name.match(regexToMatchStoryId); //look for the story ID
   var storyId = null;
 
   if(regex != null && regex[1]!= null){
@@ -195,6 +196,7 @@ function findMatchingStoriesBoard(currentBoard, potentialBoards, storyId) {
         var cards = jQuery.parseJSON(resp);
         findMatchingStoryCard(cards, storyId, currentBoard);
       }, request);
+      return null;
     }
   }
   return null;
@@ -229,7 +231,7 @@ function outputRedmineStoryInfoToPopup(name, url, status, description) {
   $('#content').hide();
   //title text
   var title = document.createElement('h4');
-  title.innerHTML = 'Parent story:';
+  title.innerHTML = 'Parent user story:';
   //story name (link)
   var a = document.createElement('a');
   a.title = name;
@@ -239,7 +241,7 @@ function outputRedmineStoryInfoToPopup(name, url, status, description) {
   //story description
   var desc = document.createElement('p');
   desc.innerHTML = description;
-  desc.className = 'descriptionText';  
+  desc.className = 'descriptionText';
 
   //output this stuff:
   $('#content').append(title);
@@ -258,7 +260,7 @@ function outputTrelloStoryInfoToPopup(card, list){
 
   //title text
   var title = document.createElement('h4');
-  title.innerHTML = 'Parent story:';
+  title.innerHTML = 'Parent user story:';
   //card name (link)
   var a = document.createElement('a');
   a.title = card.name;
