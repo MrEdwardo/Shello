@@ -1,4 +1,4 @@
-// Copyright (c) 2012 Ed Shelley
+// Copyright (c) 2013 Ed Shelley
 // A Chrome extension to display information relevant
 // to the currently open card on Trello.com
 var redmineKey = "";
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelector('#btnApiSubmit').addEventListener('click', btnApiSubmitClick);
 });
 
-getModePrefs(); // set whether we're in Trello or Redmine mode
+getModePrefs(); // determine whether we're in Trello or Redmine mode
 
 function onAuthorized() {
   chrome.tabs.getSelected(null,function(tab) {
@@ -66,7 +66,7 @@ function getModePrefs_Complete() {
   if(mode === 'redmine') {
     var testing = 'ha';
     if(redmineKey.length < 5) {
-      //show the prompt
+      // we don't have a valid redmine API key - show the prompt
       $('#api-warning').fadeIn();
       return;
     }
@@ -79,7 +79,6 @@ function getModePrefs_Complete() {
   } else if (mode === 'redmine') {
     console.log("Proceeding in Redmine mode...");
   }
-
   oauth.authorize(onAuthorized);
 }
 
@@ -132,12 +131,41 @@ function getCard_Callback(resp, xhr, boardGuid) {
 function getCurrentBoard_Callback(resp, xhr, storyId){
   var board = jQuery.parseJSON(resp);
 
-  if(mode === 'trello') {
-    findStoryFromTrello(storyId, board);
-  } else if(mode === 'redmine') {
-    findStoryFromRedmine(storyId, board.id);
-  }
+  if(board.name.toLowerCase().indexOf("stories") !== -1) {
+    //this is a story board. let's find related tasks.
+    if(mode === 'redmine') {
+      outputErrorMessageToPopup("This looks like a stories board; Finding tasks in Redmine isn't supported.");
+      return;
+    } else if(mode === 'trello') {
+      // Find the corresponding tasks board
+      getAllPotentialTaskBoards(board, storyId);
+    }
+
+  } else if(board.name.toLowerCase().indexOf("tasks") !== -1) {
+    //this is a task board. We want to determine the related story.
+    if(mode === 'trello') {
+      findStoryFromTrello(storyId, board);
+    } else if(mode === 'redmine') {
+      findStoryFromRedmine(storyId, board.id);
+    }
   return;
+  } else {
+    //we don't know what type of board it is.
+    outputErrorMessageToPopup("Unable to determine whether this is a User Story or Task board.");
+    return;
+  }
+}
+
+function getAllPotentialTaskBoards(board, storyId) {
+  // Now look at user's Trello boards for a match.
+  var url = 'https://trello.com/1/members/my/boards';
+  var request = {
+    'method': 'GET',
+  };
+  oauth.sendSignedRequest(url, function(resp, xhr) {
+    var boards = jQuery.parseJSON(resp);
+    findMatchingTasksBoard(board, boards, storyId);
+  }, request);
 }
 
 function findStoryFromTrello(storyId, board){
@@ -200,6 +228,43 @@ function findMatchingStoriesBoard(currentBoard, potentialBoards, storyId) {
     }
   }
   return null;
+}
+
+function findMatchingTasksBoard(currentBoard, potentialBoards, storyId) {
+  var trimmed = currentBoard.name.toLowerCase().replace(' stories', '');
+  for(var board in potentialBoards){
+    var trimmed2 = potentialBoards[board].name.toLowerCase().replace(' tasks', '');
+    if(trimmed2.indexOf(trimmed) != -1 && potentialBoards[board].name.toLowerCase().indexOf('tasks') != -1){
+      // FOUND IT!
+      var currentBoardUrl = 'https://trello.com/1/boards/' + potentialBoards[board].id + '/cards/open';
+      var request = {
+        'method': 'GET',
+      };
+      oauth.sendSignedRequest(currentBoardUrl, function(resp, xhr){
+        var cards = jQuery.parseJSON(resp);
+        findMatchingTaskCards(cards, storyId, currentBoard);
+      }, request);
+      return null;
+    }
+  }
+  return null;
+}
+
+function findMatchingTaskCards(cards, storyId, currentBoard){
+  var matches = new Array();
+
+  for(var card in cards){
+    var name = cards[card].name;
+    if(name.indexOf('{' + storyId + '}') != -1 && currentBoard.id !== cards[card].idBoard){
+      matches.push(cards[card]);
+    }
+  }
+  if(matches.length > 0) {
+    ouputTrelloTasksInfoToPopup(matches);
+  } else {
+    outputErrorMessageToPopup("Couldn't find any matching tasks.");
+    return;
+  }
 }
 
 function findMatchingStoryCard(cards, storyId, currentBoard){
@@ -285,6 +350,36 @@ function outputTrelloStoryInfoToPopup(card, list){
   $('#content').fadeIn();
 }
 
+function ouputTrelloTasksInfoToPopup(cards)
+{
+  $('#loader').hide();
+  $('#content').hide();
+
+  //title text
+  var title = document.createElement('h4');
+  title.innerHTML = 'Tasks for this user story:';
+  $('#content').append(title);
+  $('#content').append(document.createElement('br'));
+
+
+  var a = null;
+  for(var x in cards){
+    var li = document.createElement('li');
+    var card = cards[x];
+    //card name (link)
+    a = document.createElement('a');
+    a.title = card.name;
+    a.innerHTML = a.title;
+    a.href = card.url;
+    a.target = "_blank";
+    $('#content').append(a);
+    //$('#content').append("&nbsp;&nbsp;<span class='label label-warning pull-right'>Code Review</span>");
+    $('#content').append(document.createElement('br'));
+    $('#content').append(document.createElement('br'));
+  }
+  $('#content').fadeIn();
+}
+
 function outputErrorMessageToPopup(message){
   $('#loader').hide();
   clearErrorMessages();
@@ -327,6 +422,8 @@ function userIsViewingCard(url) {
   return true;
 }
 
+
+// EVENT HANDLERS__________________
 function modeTrelloClick() {
   mode = 'trello';
   $('#api-warning').hide();
