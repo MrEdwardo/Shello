@@ -1,6 +1,6 @@
 {
   "name": "Shello",
-  "version": "0.4",
+  "version": "0.4.1",
   "manifest_version": 2,
   "description": "Links your tasks in Trello.com to related user stories in Trello, or Redmine.",
   "browser_action": {
