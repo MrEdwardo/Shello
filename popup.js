@@ -337,16 +337,20 @@ function outputTrelloStoryInfoToPopup(card, list){
   desc.innerHTML = card.desc;
   desc.className = 'descriptionText';
   //card's list
-  var listName = document.createElement('p');
-  listName.innerHTML = "This story is <b>" + list.name + "</b>";
+  var listName = document.createElement('span');
+  listName.innerHTML = list.name;
+  listName.className = 'label label-success';
+
+  $('#content').append("<div id='card-list'></div>");
+  $('#card-list').append("<div id='card' class='trello-card'></div>");
+  $('#card').append(a);
+  $('#card').append(document.createElement('br'));
+  $('#card').append(document.createElement('br'));
+  $('#card').append(desc);
+  $('#card').append(listName);
 
   //output this stuff:
-  $('#content').append(title);
-  $('#content').append(a);
-  $('#content').append(document.createElement('br'));
-  $('#content').append(document.createElement('br'));
-  $('#content').append(desc);
-  $('#content').append(listName);
+  $('#title').append(title);
   $('#content').fadeIn();
 }
 
@@ -358,12 +362,13 @@ function ouputTrelloTasksInfoToPopup(cards)
   //title text
   var title = document.createElement('h4');
   title.innerHTML = 'Tasks for this user story:';
-  $('#content').append(title);
-  $('#content').append(document.createElement('br'));
-
+  $('#title').append(title);
+  //$('#content').append(document.createElement('br'));
+  $('#content').append("<div id='card-list'></div>");
 
   var a = null;
   for(var x in cards){
+    $('#card-list').append("<div id='card"+ x + "'' class='trello-card'></div>");
     var li = document.createElement('li');
     var card = cards[x];
     //card name (link)
@@ -372,10 +377,8 @@ function ouputTrelloTasksInfoToPopup(cards)
     a.innerHTML = a.title;
     a.href = card.url;
     a.target = "_blank";
-    $('#content').append(a);
-    //$('#content').append("&nbsp;&nbsp;<span class='label label-warning pull-right'>Code Review</span>");
-    $('#content').append(document.createElement('br'));
-    $('#content').append(document.createElement('br'));
+    a.class = "trello-card-title";
+    $('#card' + x).append(a);
   }
   $('#content').fadeIn();
 }
