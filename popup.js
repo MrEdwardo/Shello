@@ -85,7 +85,7 @@ function getModePrefs_Complete() {
 function getCurrentCardObject(url) {
 
   if(!userIsViewingCard(url)){
-    outputErrorMessageToPopup("Open a Trello card to view Story information.");
+    outputErrorMessageToPopup("Open a Trello card to view Story or Task information.");
     return;
   }
 
@@ -308,12 +308,13 @@ function outputRedmineStoryInfoToPopup(name, url, status, description) {
   desc.innerHTML = description;
   desc.className = 'descriptionText';
 
-  //output this stuff:
-  $('#content').append(title);
-  $('#content').append(a);
-  $('#content').append(document.createElement('br'));
-  $('#content').append(document.createElement('br'));
-  $('#content').append(desc);
+  $('#content').append("<div id='card-list'></div>");
+  $('#card-list').append("<div id='card' class='trello-card'></div>");
+  $('#card').append(a);
+  $('#card').append(document.createElement('br'));
+  $('#card').append(document.createElement('br'));
+  $('#card').append(desc);
+
   $('#content').fadeIn();
 }
 
@@ -387,7 +388,7 @@ function outputErrorMessageToPopup(message){
   $('#loader').hide();
   clearErrorMessages();
   $('#content').hide();
-  $('#content').append(document.createTextNode(message));
+  $('#content').append('<div id="card-list"<p>' + message + '</p></div>');
   $('#content').fadeIn();
 }
 
