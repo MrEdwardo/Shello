@@ -9,7 +9,7 @@ var oauth = ChromeExOAuth.initBackgroundPage({
   'consumer_key': appKey,
   'consumer_secret': appSecret,
   //'scope': '',//<scope of data access, not used by all OAuth providers>,
-  'app_name': 'Shello'
+  'app_name': 'Shello for Trello'
 });
 
 
@@ -25,8 +25,6 @@ function onAuthorized() {
 
   oauth.sendSignedRequest(url, callback, request);
 
-  // Send: GET https://docs.google.com/feeds/default/private/full?alt=json
-  //oauth.sendSignedRequest(url, callback, request);
 };
 
 oauth.authorize(onAuthorized);

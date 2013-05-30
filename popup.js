@@ -2,7 +2,7 @@
 // A Chrome extension to display information relevant
 // to the currently open card on Trello.com
 var redmineKey = "";
-var redmineReqUrl = "https://redmine.rm.com/redmine/issues.json?&tracker_id=12&status_id=*&key=";
+var redmineReqUrl = "";
 var mode = "";
 var oauth = chrome.extension.getBackgroundPage().oauth;
 var regexToMatchStoryId = /\{(s\d+s)\}/;
