@@ -26,6 +26,11 @@ function onAuthorized() {
 };
 
 function getModePrefs() {
+
+  mode = 'trello';
+  getModePrefs_Complete();
+
+  /**
   chrome.storage.sync.get('storyMode', function(items) {
     if(items != null && items['storyMode'] != null) {
 
@@ -53,6 +58,8 @@ function getModePrefs() {
       modeTrelloClick();
     }
   });
+**/
+
 }
 
 function saveKeyToPrefs(key) {
@@ -71,8 +78,6 @@ function getModePrefs_Complete() {
       return;
     }
   }
-
-  $('#loader').show();
   clearErrorMessages();
   if(mode === 'trello') {
   console.log("Proceeding in Trello mode...");
@@ -88,6 +93,8 @@ function getCurrentCardObject(url) {
     outputErrorMessageToPopup("Open a Trello card to view Story or Task information.");
     return;
   }
+
+  $('#loader').show();
 
   //extract card ID from the url
   var cardId = getCardIdFromUrl(url);
@@ -296,7 +303,7 @@ function outputRedmineStoryInfoToPopup(name, url, status, description) {
   $('#content').hide();
   //title text
   var title = document.createElement('h4');
-  title.innerHTML = 'Parent user story:';
+  title.innerHTML = 'Parent user story';
   //story name (link)
   var a = document.createElement('a');
   a.title = name;
@@ -326,7 +333,7 @@ function outputTrelloStoryInfoToPopup(card, list){
 
   //title text
   var title = document.createElement('h4');
-  title.innerHTML = 'Parent user story:';
+  title.innerHTML = 'Parent user story';
   //card name (link)
   var a = document.createElement('a');
   a.title = card.name;
@@ -343,6 +350,7 @@ function outputTrelloStoryInfoToPopup(card, list){
   listName.className = 'label label-success';
 
   $('#content').append("<div id='card-list'></div>");
+  $('#card-list').append(title);
   $('#card-list').append("<div id='card' class='trello-card'></div>");
   $('#card').append(a);
   $('#card').append(document.createElement('br'));
@@ -351,7 +359,8 @@ function outputTrelloStoryInfoToPopup(card, list){
   $('#card').append(listName);
 
   //output this stuff:
-  $('#title').append(title);
+
+  //$('#title').append(title);
   $('#content').fadeIn();
 }
 
@@ -362,10 +371,9 @@ function ouputTrelloTasksInfoToPopup(cards)
 
   //title text
   var title = document.createElement('h4');
-  title.innerHTML = 'Tasks for this user story:';
-  $('#title').append(title);
-  //$('#content').append(document.createElement('br'));
+  title.innerHTML = 'Related Tasks';
   $('#content').append("<div id='card-list'></div>");
+  $('#card-list').append(title);
 
   var a = null;
   for(var x in cards){

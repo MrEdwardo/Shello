@@ -23,9 +23,12 @@
       p {
         color: #FFF;
       }
+      h4 {
+        margin: 5px;
+      }
 
       #loader {
-        background-image:url('ajax-loader.gif');
+        background-image:url('img/ajax-loader.gif');
         background-repeat: no-repeat;
         background-position: center;
       }
@@ -92,11 +95,6 @@
         word-wrap: break-word;
       }
 
-      #title {
-        margin-bottom:20px;
-        margin-top: -15px;
-      }
-
     </style>
 
     <!-- JavaScript and HTML must be in separate files for security. -->
@@ -105,7 +103,7 @@
     <script src="popup.js"></script>
   </head>
   <body>
-    <div class="toggleButton">
+    <div class="toggleButton" style="display:none;">
       <div class="btn-group">
         <button id="modeTrello" type="button" class="btn btn-secondary" >Trello</button>
         <button id="modeRedmine" type="button" class="btn btn-secondary" >Redmine</button>
@@ -122,10 +120,7 @@
     </div>
 
     <div id="loader">
-      <p style="color:black;">Finding user story...</p>
-    </div>
-
-    <div id="title">
+      <p style="color:black;">Loading Trello data...</p>
     </div>
 
     <div id="content" style="display:none;">
