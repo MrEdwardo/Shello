@@ -206,7 +206,7 @@ function findStoryFromRedmine(storyId, boardName) {
           if(customField.name.toLowerCase() === "existing story id" ){ // this is the user story field ID
             console.log(customField.value);
             if(customField.value.toUpperCase().replace(' ', '') === storyId.toUpperCase()) {
-              outputRedmineStoryInfoToPopup(issue.subject, "https://redmine.rm.com/redmine/issues/" + issue.id, "", issue.description);
+              outputRedmineStoryInfoToPopup(issue.subject, "https://redmine.xx.com/redmine/issues/" + issue.id, "", issue.description);
               return;
             }
           }
