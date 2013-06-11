@@ -220,18 +220,20 @@ function findStoryFromRedmine(storyId, boardName) {
 function findMatchingStoriesBoard(currentBoard, potentialBoards, storyId) {
   var trimmed = currentBoard.name.toLowerCase().replace(' tasks', '');
   for(var board in potentialBoards){
-    var trimmed2 = potentialBoards[board].name.toLowerCase().replace(' stories', '');
-    if(trimmed2.indexOf(trimmed) != -1){
-      // FOUND IT!
-      var currentBoardUrl = 'https://trello.com/1/boards/' + potentialBoards[board].id + '/cards/open';
-      var request = {
-        'method': 'GET',
-      };
-      oauth.sendSignedRequest(currentBoardUrl, function(resp, xhr){
-        var cards = jQuery.parseJSON(resp);
-        findMatchingStoryCard(cards, storyId, currentBoard);
-      }, request);
-      return null;
+      if(potentialBoards[board].name.toLowerCase().indexOf('stories') != -1) { //name contains 'stories'
+      var trimmed2 = potentialBoards[board].name.toLowerCase().replace(' stories', '');
+      if(trimmed2.indexOf(trimmed) != -1){ //rest of name is common
+        // FOUND IT!
+        var currentBoardUrl = 'https://trello.com/1/boards/' + potentialBoards[board].id + '/cards/open';
+        var request = {
+          'method': 'GET',
+        };
+        oauth.sendSignedRequest(currentBoardUrl, function(resp, xhr){
+          var cards = jQuery.parseJSON(resp);
+          findMatchingStoryCard(cards, storyId, currentBoard);
+        }, request);
+        return null;
+      }
     }
   }
   return null;
